@@ -63,13 +63,15 @@ app.post("/send", async (req, res) => {
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: Number(process.env.SMTP_PORT),
-            secure: false,
+            secure: Number(process.env.SMTP_PORT) === 465,
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
         });
-
+        await transporter.verify();
+        console.log("✅ SMTP server is ready to send emails");
+        
         await transporter.sendMail({
             from: `"Portfolio Contact" <${process.env.SMTP_USER}>`,
             to: process.env.RECEIVER_EMAIL,
