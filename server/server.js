@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const Groq = require("groq-sdk");
 const path = require("path");
-const { Resend } = require("resend");   // ✅ added
+const { Resend } = require("resend");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +26,7 @@ const groq = new Groq({
 /* ============ RESEND SETUP ============ */
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+
 /* ============ AI CHATBOT API ============ */
 app.post("/chat", async (req, res) => {
     try {
@@ -37,10 +38,39 @@ app.post("/chat", async (req, res) => {
 
         const completion = await groq.chat.completions.create({
             model: "llama-3.1-8b-instant",
+            temperature: 0.2,
+            max_tokens: 150,
             messages: [
                 {
                     role: "system",
-                    content: `You are AI Udai... (unchanged)`
+                    content: `
+You are AI Udai, the official portfolio assistant of Udai Raj Pandey.
+
+STRICT RULES:
+- Only answer questions about Udai Raj Pandey
+- Allowed topics: skills, projects, education, experience, contact through website
+- Do NOT answer general questions
+- Do NOT give coding help
+- Do NOT give random knowledge
+- Do NOT make up information
+
+If question is unrelated, reply:
+"I can only answer questions related to Udai's portfolio, skills, or projects."
+
+Known Information:
+
+Skills:
+Machine Learning, Artificial Intelligence, Python, NLP, Computer Vision,
+JavaScript, basic full-stack development, data analysis.
+
+Projects:
+1. Groundwater Condition Dashboard using ML
+2. Mental Health Detection System using NLP
+3. Live Digital Traffic Management System using ML
+
+Tone:
+Professional, short, recruiter-friendly.
+`
                 },
                 {
                     role: "user",
@@ -49,8 +79,16 @@ app.post("/chat", async (req, res) => {
             ],
         });
 
+        const reply = completion.choices[0].message.content;
+
+        if (!reply) {
+            return res.json({
+                reply: "Please ask about my skills, projects, or experience."
+            });
+        }
+
         res.json({
-            reply: completion.choices[0].message.content,
+            reply: reply,
         });
 
     } catch (error) {
