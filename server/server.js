@@ -1,9 +1,9 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
 const Groq = require("groq-sdk");
 const path = require("path");
+const { Resend } = require("resend");   // ✅ added
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +22,9 @@ app.get("/", (req, res) => {
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
+
+/* ============ RESEND SETUP ============ */
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* ============ AI CHATBOT API ============ */
 app.post("/chat", async (req, res) => {
@@ -49,33 +52,23 @@ app.post("/chat", async (req, res) => {
         res.json({
             reply: completion.choices[0].message.content,
         });
+
     } catch (error) {
         console.error("GROQ ERROR:", error.message);
         res.status(500).json({ reply: "⚠️ AI service unavailable" });
     }
 });
 
-/* ============ CONTACT FORM API ============ */
+
+/* ============ CONTACT FORM API (UPDATED) ============ */
 app.post("/send", async (req, res) => {
     const { name, email, message } = req.body;
 
     try {
-        const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
-        await transporter.verify();
-        console.log("✅ SMTP server is ready to send emails");
-        
-        await transporter.sendMail({
-            from: `"Portfolio Contact" <${process.env.SMTP_USER}>`,
+
+        await resend.emails.send({
+            from: "onboarding@resend.dev",
             to: process.env.RECEIVER_EMAIL,
-            replyTo: email,
             subject: `New message from ${name}`,
             text: `
 Name: ${name}
@@ -87,11 +80,13 @@ ${message}
         });
 
         res.json({ message: "Message sent successfully!" });
+
     } catch (error) {
-        console.error("MAIL ERROR:", error.message);
+        console.error("MAIL ERROR:", error);
         res.status(500).json({ message: "Failed to send email" });
     }
 });
+
 
 /* ============ START SERVER ============ */
 app.listen(PORT, () => {
