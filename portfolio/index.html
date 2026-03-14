@@ -282,26 +282,6 @@
                     <button type="submit" class="contact__button button">Submit</button>
                 </form>
 
-                <script>
-                    const form = document.getElementById("contact-form");
-
-                    form.addEventListener("submit", async (e) => {
-                        e.preventDefault();
-
-                        const data = Object.fromEntries(new FormData(form).entries());
-
-                        const res = await fetch("/send", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(data),
-                        });
-
-                        const result = await res.json();
-                        alert(result.message); 
-                        form.reset();
-                    });
-                </script>
-
             </div>
         </section>
     </main>
@@ -343,6 +323,49 @@
         </div>
     </div>
 
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const form = document.getElementById("contact-form");
+
+    if (!form) {
+        console.log("Form not found");
+        return;
+    }
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const data = Object.fromEntries(
+            new FormData(form).entries()
+        );
+
+        console.log("Sending data:", data);
+
+        try {
+            const res = await fetch("/send", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            alert(result.message);
+
+            form.reset();
+
+        } catch (err) {
+            console.error(err);
+            alert("Error sending message");
+        }
+
+    });
+
+});
+</script>
 
 </body>
 
