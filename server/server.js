@@ -3,7 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const Groq = require("groq-sdk");
 const path = require("path");
-const { Resend } = require("resend");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,8 +22,7 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
 
-/* ============ RESEND SETUP ============ */
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 
 /* ============ AI CHATBOT API ============ */
@@ -98,32 +96,6 @@ Professional, short, recruiter-friendly.
 });
 
 
-/* ============ CONTACT FORM API (UPDATED) ============ */
-app.post("/send", async (req, res) => {
-    const { name, email, message } = req.body;
-
-    try {
-
-        await resend.emails.send({
-            from: "onboarding@resend.dev",
-            to: process.env.RECEIVER_EMAIL,
-            subject: `New message from ${name}`,
-            text: `
-Name: ${name}
-Email: ${email}
-
-Message:
-${message}
-            `,
-        });
-
-        res.json({ message: "Message sent successfully!" });
-
-    } catch (error) {
-        console.error("MAIL ERROR:", error);
-        res.status(500).json({ message: "Failed to send email" });
-    }
-});
 
 
 /* ============ START SERVER ============ */
